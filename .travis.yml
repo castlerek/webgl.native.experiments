@@ -1,0 +1,19 @@
+language: node_js
+node_js:
+    - "5.3.0"
+before_script:
+    - npm install -g gulp
+script:
+    - npm install
+    - npm run build
+after_script:
+    - ls build
+    - git clone https://castlerek:$token@github.com/castlerek/webgl.native.experiments.git --depth=1 --branch=gh-pages gh-pages
+    - cd gh-pages
+    - git branch
+    - rm -rf * && rm -f .travis.yml && rm -f .appveyor.yml
+    - cp -R ../build build
+    - cp -R ../deployment/* .
+    - echo Current path $(pwd)
+    - echo -e "Directory content\n$(ls -la)"
+    - git push origin gh-pages
