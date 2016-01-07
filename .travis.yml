@@ -1,0 +1,19 @@
+language: node_js
+node_js:
+    - "5.3.0"
+before_script:
+    - npm install -g gulp
+script:
+    - npm install
+    - npm run build
+after_script:
+    - ls build
+    - echo The token value: $token
+    - git clone https://castlerek:$token@github.com/castlerek/webgl.native.experiments.git --branch=gh-pages gh-pages
+    - cd gh-pages
+    - git remote rm origin
+    - git remote add origin https://castlerek:$token@github.com/castlerek/webgl.native.experiments.git
+    - cp -R ../build build
+    - cp -R ../deployment/* .
+    - ls
+    - git push origin gh-pages
