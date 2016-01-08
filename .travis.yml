@@ -8,12 +8,21 @@ script:
     - npm run build
 after_script:
     - ls build
-    - echo The token value: $token
     - git clone https://castlerek:$token@github.com/castlerek/webgl.native.experiments.git --branch=gh-pages gh-pages
     - cd gh-pages
-    - git remote rm origin
-    - git remote add origin https://castlerek:$token@github.com/castlerek/webgl.native.experiments.git
-    - cp -R ../build build
-    - cp -R ../deployment/* .
-    - ls
+    - git branch
+    - echo -e "Directory before-content\n$(ls -la)"
+    - rm -rf * && rm -f .travis.yml && rm -f .appveyor.yml
+    - export revision=$TRAVIS_COMMIT.$TRAVIS_BUILD_NUMBER
+    - echo $revision
+    - mkdir $revision
+    - cd $revision
+    - cp -R ../../build build
+    - cp -R ../../deployment/* .
+    - git add --all
+    - git status
+    - echo Current path $(pwd)
+    - echo -e "Directory after-content\n$(ls -la)"
+    - git config --global user.name "Travis CI"
+    - git commit -m "Update for $TRAVIS_COMMIT"
     - git push origin gh-pages
