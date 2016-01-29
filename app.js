@@ -106,6 +106,10 @@
         }
     }
 
+    function isPowerOf2( value ) {
+        return ( value & ( value - 1 ) ) === 0;
+    }
+
     let gl       = null,
         canvas   = null,
         program  = null,
@@ -219,10 +223,6 @@
         gl.enableVertexAttribArray(
             gl.getAttribLocation( program, "vertexColor" )
         );
-
-        gl.enableVertexAttribArray(
-            gl.getAttribLocation( program, "vertexTexture" )
-        );
     }
 
     function initGlBuffers() {
@@ -243,7 +243,7 @@
 
         gl.bindBuffer( gl.ARRAY_BUFFER, buffers.texture );
         gl.bufferData( gl.ARRAY_BUFFER, textureCoordinates, gl.DYNAMIC_DRAW );
-        buffers.texture.mi = { size: 2, count: 6 };
+        buffers.texture.mi = { size: 2, count: 8 };
 
         gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, buffers.indices );
         gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, vertexIndices, gl.DYNAMIC_DRAW );
@@ -260,12 +260,19 @@
         };
     }
 
-    function handleLoadedTexture() {
+    function handleLoadedTexture( image ) {
         gl.bindTexture( gl.TEXTURE_2D, texture );
-        gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true );
-        gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
-        gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST );
+
+        if ( isPowerOf2( texture.image.width ) && isPowerOf2( texture.image.height ) ) {
+            gl.generateMipmap( gl.TEXTURE_2D );
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR );
+        }
+        else {
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
+            gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
+        }
+
         gl.bindTexture( gl.TEXTURE_2D, null );
     }
 
@@ -304,6 +311,7 @@
             viewMatrix.rawData
         );
 
+        // vertex
         gl.bindBuffer( gl.ARRAY_BUFFER, buffers.vertex );
         gl.vertexAttribPointer(
             gl.getAttribLocation( program, "vertexPosition" ),
@@ -314,8 +322,10 @@
             0
         );
 
+        // vertex indices
         gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, buffers.indices );
 
+        // color
         gl.bindBuffer( gl.ARRAY_BUFFER, buffers.color );
         gl.vertexAttribPointer(
             gl.getAttribLocation( program, "vertexColor" ),
@@ -337,6 +347,11 @@
         );
 
         if ( texture instanceof WebGLTexture && texture.initialized ) {
+            // texture
+            gl.enableVertexAttribArray(
+                gl.getAttribLocation( program, "vertexTexture" )
+            );
+
             gl.bindBuffer( gl.ARRAY_BUFFER, buffers.texture );
             gl.vertexAttribPointer(
                 gl.getAttribLocation( program, "vertexTexture" ),
